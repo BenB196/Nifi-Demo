@@ -181,7 +181,6 @@ services:
         #- ./nifi_registry/database:/opt/nifi-registry/nifi-registry-current/database
         #- ./nifi_registry/flow_storage:/opt/nifi-registry/nifi-registry-current/flow_storage
         - nifi-registry:/opt/nifi-registry/nifi-registry-current
-        - ./input:/tmp/input
 #      networks:
 #        - my_persistent_network
     # data extraction, transformation and load service
@@ -198,8 +197,8 @@ services:
         - NIFI_ZK_CONNECT_STRING=myzookeeper:2181
         - NIFI_ELECTION_MAX_WAIT=30 sec
         - NIFI_SENSITIVE_PROPS_KEY='12345678901234567890A'
-        - SINGLE_USER_CREDENTIALS_USERNAME=user
-        - SINGLE_USER_CREDENTIALS_PASSWORD=password1234
+        - SINGLE_USER_CREDENTIALS_USERNAME=${NIFI_SINGLE_USER_CREDENTIALS_USERNAME}
+        - SINGLE_USER_CREDENTIALS_PASSWORD=${NIFI_SINGLE_USER_CREDENTIALS_PASSWORD}
       healthcheck:
         test: "${DOCKER_HEALTHCHECK_TEST:-curl -k localhost:8443/nifi/}"
         interval: "60s"
@@ -213,6 +212,8 @@ services:
         #- ./nifi/state:/opt/nifi/nifi-current/state
         #- ./nifi/logs:/opt/nifi/nifi-current/logs
         - nifi:/opt/nifi/nifi-current
+        - ./input:/tmp/input
+        - ./output:/tmp/output
         # uncomment the next line after copying the /conf directory from the container to your local directory to persist NiFi flows
         #- ./nifi/conf:/opt/nifi/nifi-current/conf
 #      networks:
