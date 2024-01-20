@@ -37,8 +37,8 @@ services:
         fi;
         echo "Setting file permissions"
         chown -R root:root config/certs;
-        find . -type d -exec chmod 750 \{\} \;;
-        find . -type f -exec chmod 640 \{\} \;;
+        find . -type d -exec chmod 755 \{\} \;;
+        find . -type f -exec chmod 644 \{\} \;;
         echo "Waiting for Elasticsearch availability";
         until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
@@ -114,7 +114,6 @@ services:
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
-      - ENTERPRISESEARCH_HOST=http://enterprisesearch:${ENTERPRISE_SEARCH_PORT}
     deploy:
       resources:
         limits:
@@ -131,49 +130,62 @@ services:
 
   # configuration manager for NiFi
   zookeeper:
-      hostname: myzookeeper
-      container_name: zookeeper_container_persistent
-      image: 'bitnami/zookeeper:3.9.1'  # latest image as of 2024-01-18.
-      environment:
-        - ALLOW_ANONYMOUS_LOGIN=yes
+    hostname: myzookeeper
+    container_name: zookeeper_container_persistent
+    image: 'bitnami/zookeeper:3.9.1'  # latest image as of 2024-01-18.
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
   # version control for nifi flows
   registry:
-      hostname: myregistry
-      container_name: registry_container_persistent
-      image: 'apache/nifi-registry:2.0.0-M1'  # latest image as of 2024-01-18.
-      ports:
-        - "18080:18080" # http://localhost:18080/nifi-registry/
-      environment:
-        - LOG_LEVEL=INFO
-        - NIFI_REGISTRY_DB_DIR=/opt/nifi-registry/nifi-registry-current/database
-        - NIFI_REGISTRY_FLOW_PROVIDER=file
-        - NIFI_REGISTRY_FLOW_STORAGE_DIR=/opt/nifi-registry/nifi-registry-current/flow_storage
-      volumes:
-        - nifi-registry:/opt/nifi-registry/nifi-registry-current
+    hostname: myregistry
+    container_name: registry_container_persistent
+    image: 'apache/nifi-registry:2.0.0-M1'  # latest image as of 2024-01-18.
+    ports:
+      - "18080:18080" # http://localhost:18080/nifi-registry/
+    environment:
+      - LOG_LEVEL=INFO
+      - NIFI_REGISTRY_DB_DIR=/opt/nifi-registry/nifi-registry-current/database
+      - NIFI_REGISTRY_FLOW_PROVIDER=file
+      - NIFI_REGISTRY_FLOW_STORAGE_DIR=/opt/nifi-registry/nifi-registry-current/flow_storage
+    volumes:
+      - nifi-registry:/opt/nifi-registry/nifi-registry-current
   # data extraction, transformation and load service
   nifi:
-      hostname: mynifi
-      container_name: nifi_container_persistent
-      image: 'apache/nifi:2.0.0-M1'  # latest image as of 2024-01-18.
-      ports:
-        - '8443:8443' # https://localhost:8443/nifi
-      environment:
-        - NIFI_CLUSTER_IS_NODE=true
-        - NIFI_CLUSTER_NODE_PROTOCOL_PORT=8082
-        - NIFI_ZK_CONNECT_STRING=myzookeeper:2181
-        - NIFI_ELECTION_MAX_WAIT=30 sec
-        - NIFI_SENSITIVE_PROPS_KEY='12345678901234567890A'
-        - SINGLE_USER_CREDENTIALS_USERNAME=${NIFI_SINGLE_USER_CREDENTIALS_USERNAME}
-        - SINGLE_USER_CREDENTIALS_PASSWORD=${NIFI_SINGLE_USER_CREDENTIALS_PASSWORD}
-      healthcheck:
-        test: "${DOCKER_HEALTHCHECK_TEST:-curl -k localhost:8443/nifi/}"
-        interval: "60s"
-        timeout: "3s"
-        retries: 5
-      volumes:
-        - nifi:/opt/nifi/nifi-current
-        - ./input:/tmp/input
-        - ./output:/tmp/output
+    hostname: mynifi
+    container_name: nifi_container_persistent
+    image: 'apache/nifi:2.0.0-M1'  # latest image as of 2024-01-18.
+    ports:
+      - '8443:8443' # https://localhost:8443/nifi
+    environment:
+      - NIFI_CLUSTER_IS_NODE=true
+      - NIFI_CLUSTER_NODE_PROTOCOL_PORT=8082
+      - NIFI_ZK_CONNECT_STRING=myzookeeper:2181
+      - NIFI_ELECTION_MAX_WAIT=30 sec
+      - NIFI_SENSITIVE_PROPS_KEY='12345678901234567890A'
+      - SINGLE_USER_CREDENTIALS_USERNAME=${NIFI_SINGLE_USER_CREDENTIALS_USERNAME}
+      - SINGLE_USER_CREDENTIALS_PASSWORD=${NIFI_SINGLE_USER_CREDENTIALS_PASSWORD}
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTIC_URL=https://es01:9200
+    healthcheck:
+      test: "${DOCKER_HEALTHCHECK_TEST:-curl -k localhost:8443/nifi/}"
+      interval: "60s"
+      timeout: "3s"
+      retries: 5
+    volumes:
+      - nifi:/opt/nifi/nifi-current
+      - ./input:/tmp/input
+      - ./output:/tmp/output
+  nifi-cert-loader:
+    depends_on:
+      setup:
+        condition: service_healthy
+    image: 'apache/nifi:2.0.0-M1'
+    volumes:
+      - nifi:/opt/nifi/nifi-current
+      - certs:/usr/share/nifi
+    user: "0"
+    entrypoint: sh -c "$${JAVA_HOME}/bin/keytool -import -trustcacerts -storepass changeit -noprompt -alias elastic -file /usr/share/nifi/ca/ca.crt -keystore /opt/nifi/nifi-current/privateCAs.jks"
 
 volumes:
   certs:
