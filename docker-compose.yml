@@ -148,7 +148,8 @@ services:
       - NIFI_REGISTRY_FLOW_PROVIDER=file
       - NIFI_REGISTRY_FLOW_STORAGE_DIR=/opt/nifi-registry/nifi-registry-current/flow_storage
     volumes:
-      - nifi-registry:/opt/nifi-registry/nifi-registry-current
+      - nifi-registry:/opt/nifi-registry/nifi-registry-current/database
+      - nifi-registry:/opt/nifi-registry/nifi-registry-current/flow_storage
   # data extraction, transformation and load service
   nifi:
     hostname: mynifi
@@ -164,37 +165,44 @@ services:
       - NIFI_SENSITIVE_PROPS_KEY='12345678901234567890A'
       - SINGLE_USER_CREDENTIALS_USERNAME=${NIFI_SINGLE_USER_CREDENTIALS_USERNAME}
       - SINGLE_USER_CREDENTIALS_PASSWORD=${NIFI_SINGLE_USER_CREDENTIALS_PASSWORD}
-      - ELASTIC_USERNAME=elastic
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_URL=https://es01:9200
     healthcheck:
       test: "${DOCKER_HEALTHCHECK_TEST:-curl -k localhost:8443/nifi/}"
       interval: "60s"
       timeout: "3s"
       retries: 5
     volumes:
-      - nifi:/opt/nifi/nifi-current
+      - nifi:/opt/nifi/nifi-current/database_repository
+      - nifi:/opt/nifi/nifi-current/flowfile_repository
+      - nifi:/opt/nifi/nifi-current/content_repository
+      - nifi:/opt/nifi/nifi-current/provenance_repository
+      - nifi:/opt/nifi/nifi-current/state
+      - nifi:/opt/nifi/nifi-current/logs
+      - nifi:/opt/nifi/nifi-current/conf
       - ./input:/tmp/input
       - ./output:/tmp/output
+      - nifi-jks:/opt/nifi/nifi-current/jks
+      - ./parameters:/opt/nifi/nifi-current/parameters
   nifi-cert-loader:
     depends_on:
       setup:
         condition: service_healthy
     image: 'apache/nifi:2.0.0-M1'
     volumes:
-      - nifi:/opt/nifi/nifi-current
+      - nifi-jks:/opt/nifi/nifi-current/jks
       - certs:/usr/share/nifi
     user: "0"
-    entrypoint: sh -c "$${JAVA_HOME}/bin/keytool -import -trustcacerts -storepass changeit -noprompt -alias elastic -file /usr/share/nifi/ca/ca.crt -keystore /opt/nifi/nifi-current/privateCAs.jks"
+    entrypoint: sh -c "$${JAVA_HOME}/bin/keytool -import -trustcacerts -storepass changeit -noprompt -alias elastic -file /usr/share/nifi/ca/ca.crt -keystore /opt/nifi/nifi-current/jks/privateCAs.jks"
 
 volumes:
   certs:
     driver: local
-  nifi-registry:
-    driver: local
-  nifi:
-    driver: local
   esdata01:
     driver: local
   kibanadata:
+    driver: local
+  nifi-jks:
+    driver: local
+  nifi:
+    driver: local
+  nifi-registry:
     driver: local
