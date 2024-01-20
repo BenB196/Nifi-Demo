@@ -27,6 +27,7 @@ This project is strictly for demonstrative purposes, it should not be used in pr
     - Kibana: http://localhost:5601
       - Same as Elasticsearch
 4. Configure the [Parameter Providers](./docs/parameter-providers/setup.md).
+5. Configure the [Parameter Contexts](./docs/parameter-contexts/setup.md).
 
 # Considerations
 
