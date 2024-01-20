@@ -1,6 +1,7 @@
-version: "2.2"
+version: "3"
 
 services:
+  # Elasticsearch setup script
   setup:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
@@ -49,7 +50,7 @@ services:
       interval: 1s
       timeout: 5s
       retries: 120
-
+  # Elasticsearch/database
   es01:
     depends_on:
       setup:
@@ -79,7 +80,10 @@ services:
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=${LICENSE}
-    mem_limit: ${MEM_LIMIT}
+    deploy:
+      resources:
+        limits:
+          memory: ${MEM_LIMIT}
     ulimits:
       memlock:
         soft: -1
@@ -93,7 +97,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
-
+  # UI for Elasticsearch
   kibana:
     depends_on:
       es01:
@@ -111,7 +115,10 @@ services:
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
       - ENTERPRISESEARCH_HOST=http://enterprisesearch:${ENTERPRISE_SEARCH_PORT}
-    mem_limit: ${MEM_LIMIT}
+    deploy:
+      resources:
+        limits:
+          memory: ${MEM_LIMIT}
     healthcheck:
       test:
         [
@@ -121,76 +128,35 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
-#  enterprisesearch:
-#    depends_on:
-#      es01:
-#        condition: service_healthy
-#      kibana:
-#        condition: service_healthy
-#    image: docker.elastic.co/enterprise-search/enterprise-search:${STACK_VERSION}
-#    volumes:
-#      - certs:/usr/share/enterprise-search/config/certs
-##      - enterprisesearchdata:/usr/share/enterprise-search/config
-#    ports:
-#      - ${ENTERPRISE_SEARCH_PORT}:3002
-#    environment:
-#      - SERVERNAME=enterprisesearch
-#      - secret_management.encryption_keys=[${ENCRYPTION_KEYS}]
-#      - allow_es_settings_modification=true
-#      - elasticsearch.host=https://es01:9200
-#      - elasticsearch.username=elastic
-#      - elasticsearch.password=${ELASTIC_PASSWORD}
-#      - elasticsearch.ssl.enabled=true
-#      - elasticsearch.ssl.certificate_authority=/usr/share/enterprise-search/config/certs/ca/ca.crt
-#      - kibana.external_url=http://kibana:5601
-#    mem_limit: ${MEM_LIMIT}
-#    healthcheck:
-#      test:
-#        [
-#          "CMD-SHELL",
-#          "curl -s -I http://localhost:3002 | grep -q 'HTTP/1.1 302 Found'",
-#        ]
-#      interval: 10s
-#      timeout: 10s
-#      retries: 120
 
-    # configuration manager for NiFi
+  # configuration manager for NiFi
   zookeeper:
       hostname: myzookeeper
       container_name: zookeeper_container_persistent
       image: 'bitnami/zookeeper:3.9.1'  # latest image as of 2024-01-18.
-      restart: on-failure
       environment:
         - ALLOW_ANONYMOUS_LOGIN=yes
-#      networks:
-#        - my_persistent_network
-    # version control for nifi flows
+  # version control for nifi flows
   registry:
       hostname: myregistry
       container_name: registry_container_persistent
       image: 'apache/nifi-registry:2.0.0-M1'  # latest image as of 2024-01-18.
-      restart: on-failure
       ports:
-        - "18080:18080"
+        - "18080:18080" # http://localhost:18080/nifi-registry/
       environment:
         - LOG_LEVEL=INFO
         - NIFI_REGISTRY_DB_DIR=/opt/nifi-registry/nifi-registry-current/database
         - NIFI_REGISTRY_FLOW_PROVIDER=file
         - NIFI_REGISTRY_FLOW_STORAGE_DIR=/opt/nifi-registry/nifi-registry-current/flow_storage
       volumes:
-        #- ./nifi_registry/database:/opt/nifi-registry/nifi-registry-current/database
-        #- ./nifi_registry/flow_storage:/opt/nifi-registry/nifi-registry-current/flow_storage
         - nifi-registry:/opt/nifi-registry/nifi-registry-current
-#      networks:
-#        - my_persistent_network
-    # data extraction, transformation and load service
+  # data extraction, transformation and load service
   nifi:
       hostname: mynifi
       container_name: nifi_container_persistent
       image: 'apache/nifi:2.0.0-M1'  # latest image as of 2024-01-18.
-      restart: on-failure
       ports:
-        - '8443:8443'
+        - '8443:8443' # https://localhost:8443/nifi
       environment:
         - NIFI_CLUSTER_IS_NODE=true
         - NIFI_CLUSTER_NODE_PROTOCOL_PORT=8082
@@ -205,19 +171,9 @@ services:
         timeout: "3s"
         retries: 5
       volumes:
-        #- ./nifi/database_repository:/opt/nifi/nifi-current/database_repository
-        #- ./nifi/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
-        #- ./nifi/content_repository:/opt/nifi/nifi-current/content_repository
-        #- ./nifi/provenance_repository:/opt/nifi/nifi-current/provenance_repository
-        #- ./nifi/state:/opt/nifi/nifi-current/state
-        #- ./nifi/logs:/opt/nifi/nifi-current/logs
         - nifi:/opt/nifi/nifi-current
         - ./input:/tmp/input
         - ./output:/tmp/output
-        # uncomment the next line after copying the /conf directory from the container to your local directory to persist NiFi flows
-        #- ./nifi/conf:/opt/nifi/nifi-current/conf
-#      networks:
-#        - my_persistent_network
 
 volumes:
   certs:
@@ -226,8 +182,6 @@ volumes:
     driver: local
   nifi:
     driver: local
-#  enterprisesearchdata:
-#    driver: local
   esdata01:
     driver: local
   kibanadata:
