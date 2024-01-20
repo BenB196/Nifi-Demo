@@ -26,9 +26,20 @@ This project is strictly for demonstrative purposes, it should not be used in pr
       - Password: changeme
     - Kibana: http://localhost:5601
       - Same as Elasticsearch
+4. Configure the [Parameter Providers](./docs/parameter-providers/setup.md).
 
 # Considerations
 
 ## Parameters Directory
 
 The [parameters directory](./parameters) in this project is intended to provide an example of being able to "hot-reload" parameter values. In a real scenario, this directory would not be committed to git (or you would at least not commit files with sensitive information).
+
+# TODOs
+
+## More Automated Setup
+
+Some of the setup steps could in theory be automated, but I don't feel like doing that work currently.
+
+- Parameter Providers
+  - I'm pretty sure this can be automated, but I can't find an API doc for this part.
+
