@@ -148,7 +148,8 @@ services:
       - NIFI_REGISTRY_FLOW_PROVIDER=file
       - NIFI_REGISTRY_FLOW_STORAGE_DIR=/opt/nifi-registry/nifi-registry-current/flow_storage
     volumes:
-      - nifi-registry:/opt/nifi-registry/nifi-registry-current
+      - ./nifi-registry/database:/opt/nifi-registry/nifi-registry-current/database
+      - ./nifi-registry/flow_storage:/opt/nifi-registry/nifi-registry-current/flow_storage
   # data extraction, transformation and load service
   nifi:
     hostname: mynifi
@@ -202,6 +203,4 @@ volumes:
   nifi-jks:
     driver: local
   nifi:
-    driver: local
-  nifi-registry:
     driver: local
