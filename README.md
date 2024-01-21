@@ -44,3 +44,6 @@ Some of the setup steps could in theory be automated, but I don't feel like doin
 - Parameter Providers
   - I'm pretty sure this can be automated, but I can't find an API doc for this part.
 
+# Known Issues
+
+This guide can't be used with `2.0.0-M1` because of [NIFI-12531](https://issues.apache.org/jira/browse/NIFI-12531). You must wait until `2.0.0-M2`, which contains the fix for this issue.
