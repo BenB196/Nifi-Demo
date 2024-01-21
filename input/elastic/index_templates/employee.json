@@ -7,6 +7,34 @@
     "settings": {
       "number_of_shards": 1,
       "number_of_replicas": 0
+    },
+    "mappings": {
+      "dynamic": false,
+      "properties": {
+        "first_name": {
+          "type": "keyword"
+        },
+        "last_name": {
+          "type": "keyword"
+        },
+        "social_security_number": {
+          "dynamic": false,
+          "properties": {
+            "value": {
+              "type": "keyword"
+            },
+            "key_identifier": {
+              "type": "keyword"
+            }
+          }
+        },
+        "created_at": {
+          "type": "date"
+        },
+        "updated_at": {
+          "type": "date"
+        }
+      }
     }
   }
 }
