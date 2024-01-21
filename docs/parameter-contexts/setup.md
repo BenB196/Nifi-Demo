@@ -26,3 +26,7 @@ To do this, the following steps need to be taken:
 5. Done! The contexts can now be used.
 
 [Return to Usage Guide](../../README.md#usage)
+
+Go to next step: [Registry Clients](../registry-clients/setup.md)
+
+Go to previous step: [Parameter Providers](../parameter-providers/setup.md)

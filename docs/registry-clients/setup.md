@@ -33,3 +33,7 @@ The following steps can be taken for this:
 7. Done! The local registry can now be used.
 
 [Return to Usage Guide](../../README.md#usage)
+
+Go to next step: [Import Demo Flows](../import-demo-flows/setup.md)
+
+Go to previous step: [Parameter Contexts](../parameter-contexts/setup.md)

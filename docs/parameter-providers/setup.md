@@ -38,3 +38,5 @@ To do this the following steps need to be taken:
 9. Done! The parameter providers can now be used.
 
 [Return to Usage Guide](../../README.md#usage)
+
+Go to next step: [Parameter Contexts](../parameter-contexts/setup.md)
