@@ -28,6 +28,7 @@ This project is strictly for demonstrative purposes, it should not be used in pr
       - Same as Elasticsearch
 4. Configure the [Parameter Providers](./docs/parameter-providers/setup.md).
 5. Configure the [Parameter Contexts](./docs/parameter-contexts/setup.md).
+6. Configure the [Registry Clients](./docs/registry-clients/setup.md).
 
 # Considerations
 

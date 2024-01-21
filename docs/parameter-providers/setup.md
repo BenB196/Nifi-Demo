@@ -35,3 +35,6 @@ To do this the following steps need to be taken:
     4. Click "APPLY"
 
    ![fetch-parameters.png](screenshots/fetch-parameters.png)
+9. Done! The parameter providers can now be used.
+
+[Return to Usage Guide](../../README.md#usage)

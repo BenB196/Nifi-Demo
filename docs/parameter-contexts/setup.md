@@ -23,3 +23,6 @@ To do this, the following steps need to be taken:
             2. To:
                ![selected-file-params.png](screenshots/selected-file-params.png)
     3. Click the "APPLY" button.
+5. Done! The contexts can now be used.
+
+[Return to Usage Guide](../../README.md#usage)
